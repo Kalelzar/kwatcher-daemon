@@ -28,7 +28,8 @@
             .hash = "122071c2c0adaa3fa3a27a872fdc0b2e762db515e3ef8c5b2225332141500e13f110",
         },
         .kwatcher = .{
-            .path = "../watcher-lib",
+            .url = "git+https://github.com/Kalelzar/kwatcher.git#e2879872a9fa30f502393eb2708689c719f4cb8f",
+            .hash = "1220f5bb6f31ec1d7d7a0f7871a1e5feeda6b2b8f0266d7be3c7f77ff25491292a3b",
         },
     },
     .paths = .{
