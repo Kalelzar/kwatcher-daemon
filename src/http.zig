@@ -12,6 +12,7 @@ fn notFound(data: *zmpl.Data) !template.Template {
 
 const App = struct {
     system_service: model.SystemService,
+    rabbitmq_service: model.RabbitMqService,
     server: *tk.Server,
     routes: []const tk.Route = &.{
         .get("/", tk.static.file("static/index.html")),
@@ -21,6 +22,7 @@ const App = struct {
                     .{},
                     &.{
                         .group("/api/system", &.{.router(api.system)}),
+                        .group("/api/rabbitmq", &.{.router(api.rabbitmq)}),
                         .get("/openapi.json", tk.swagger.json(.{ .info = .{ .title = "KWatcher Daemon" } })),
                         .get("/swagger-ui", tk.swagger.ui(.{ .url = "openapi.json" })),
                         .get("/*", notFound),

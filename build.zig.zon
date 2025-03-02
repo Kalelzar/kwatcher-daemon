@@ -28,8 +28,8 @@
             .hash = "122071c2c0adaa3fa3a27a872fdc0b2e762db515e3ef8c5b2225332141500e13f110",
         },
         .kwatcher = .{
-            .url = "git+https://github.com/Kalelzar/kwatcher.git#e2879872a9fa30f502393eb2708689c719f4cb8f",
-            .hash = "1220f5bb6f31ec1d7d7a0f7871a1e5feeda6b2b8f0266d7be3c7f77ff25491292a3b",
+            .url = "git+https://github.com/Kalelzar/kwatcher.git#0d762dbee0b0ef4d4aa9f749e438b71dc804468b",
+            .hash = "1220d5f025be9e33a6f4a537aa8edd1e29962d0d257b085085804993c7b676ac4848",
         },
         .zmpl = .{
             .url = "git+https://github.com/jetzig-framework/zmpl.git#04d9fa7c3f6369790aac1fc64625e91222072ebc",
