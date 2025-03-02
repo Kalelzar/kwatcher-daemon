@@ -11,14 +11,18 @@ const Builder = struct {
     kwatcher_daemon: *std.Build.Module,
     kwatcher_http: *std.Build.Module,
     kwatcher_daemon_lib: *std.Build.Module,
+    zmpl: *std.Build.Module,
 
     fn init(b: *std.Build) Builder {
         const target = b.standardTargetOptions(.{});
         const opt = b.standardOptimizeOption(.{});
 
         const check_step = b.step("check", "");
-
-        const tokamak = b.dependency("tokamak", .{}).module("tokamak");
+        const embed: []const []const u8 = &.{
+            "static/index.html",
+        };
+        const tokamak = b.dependency("tokamak", .{ .embed = embed }).module("tokamak");
+        const zmpl = b.dependency("zmpl", .{}).module("zmpl");
         const kwatcher = b.dependency("kwatcher", .{}).module("kwatcher");
         const kwatcher_daemon_lib = b.addModule("kawatcher-daemon", .{
             .root_source_file = b.path("src/root.zig"),
@@ -26,12 +30,14 @@ const Builder = struct {
         kwatcher_daemon_lib.link_libc = true;
         kwatcher_daemon_lib.addImport("tokamak", tokamak);
         kwatcher_daemon_lib.addImport("kwatcher", kwatcher);
+        kwatcher_daemon_lib.addImport("zmpl", zmpl);
 
         const kwatcher_http = b.createModule(.{
             .root_source_file = b.path("src/http.zig"),
         });
         kwatcher_http.link_libc = true;
         kwatcher_http.addImport("tokamak", tokamak);
+        kwatcher_http.addImport("zmpl", zmpl);
         kwatcher_http.addImport("kwatcher-daemon", kwatcher_daemon_lib);
 
         const kwatcher_daemon = b.createModule(.{
@@ -51,6 +57,7 @@ const Builder = struct {
             .kwatcher_daemon = kwatcher_daemon,
             .kwatcher_http = kwatcher_http,
             .kwatcher_daemon_lib = kwatcher_daemon_lib,
+            .zmpl = zmpl,
         };
     }
 
@@ -62,6 +69,7 @@ const Builder = struct {
         step.linkSystemLibrary("rabbitmq.4");
         step.root_module.addImport("tokamak", self.tokamak);
         step.root_module.addImport("kwatcher", self.kwatcher);
+        step.root_module.addImport("zmpl", self.zmpl);
         step.addLibraryPath(.{ .cwd_relative = "." });
         step.addLibraryPath(.{ .cwd_relative = "." });
     }
@@ -113,7 +121,7 @@ pub fn build(b: *std.Build) !void {
     try builder.installAndCheck(daemon);
     daemon.root_module.addImport("kwatcher-daemon", builder.kwatcher_daemon_lib);
 
-    const http = builder.addExecutable("kwatcher-daemon", "src/http.zig");
+    const http = builder.addExecutable("kwatcher-server", "src/http.zig");
     builder.addDependencies(http);
     try builder.installAndCheck(http);
     http.root_module.addImport("kwatcher-daemon", builder.kwatcher_daemon_lib);
