@@ -31,6 +31,10 @@
             .url = "git+https://github.com/Kalelzar/kwatcher.git#e2879872a9fa30f502393eb2708689c719f4cb8f",
             .hash = "1220f5bb6f31ec1d7d7a0f7871a1e5feeda6b2b8f0266d7be3c7f77ff25491292a3b",
         },
+        .zmpl = .{
+            .url = "git+https://github.com/jetzig-framework/zmpl.git#04d9fa7c3f6369790aac1fc64625e91222072ebc",
+            .hash = "122078b3cd8ac2be7ba7b122312de7abee6de6be905287e2b3d80b09e5481a39e70f",
+        },
     },
     .paths = .{
         "build.zig",
