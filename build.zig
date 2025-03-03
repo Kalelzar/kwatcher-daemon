@@ -6,11 +6,13 @@ const Builder = struct {
     target: std.Build.ResolvedTarget,
     opt: std.builtin.OptimizeMode,
     check_step: *std.Build.Step,
-    tokamak: *std.Build.Module,
+    httpz: *std.Build.Module,
     kwatcher: *std.Build.Module,
     kwatcher_daemon: *std.Build.Module,
     kwatcher_http: *std.Build.Module,
     kwatcher_daemon_lib: *std.Build.Module,
+    tokamak: *std.Build.Module,
+    metrics: *std.Build.Module,
     zmpl: *std.Build.Module,
 
     fn init(b: *std.Build) Builder {
@@ -21,9 +23,13 @@ const Builder = struct {
         const embed: []const []const u8 = &.{
             "static/index.html",
         };
-        const tokamak = b.dependency("tokamak", .{ .embed = embed }).module("tokamak");
-        const zmpl = b.dependency("zmpl", .{}).module("zmpl");
-        const kwatcher = b.dependency("kwatcher", .{}).module("kwatcher");
+        const tk = b.dependency("tokamak", .{ .embed = embed, .target = target, .optimize = opt });
+        const tokamak = tk.module("tokamak");
+        const hz = tk.builder.dependency("httpz", .{ .target = target, .optimize = opt });
+        const httpz = hz.module("httpz");
+        const metrics = hz.builder.dependency("metrics", .{ .target = target, .optimize = opt }).module("metrics");
+        const zmpl = b.dependency("zmpl", .{ .target = target, .optimize = opt }).module("zmpl");
+        const kwatcher = b.dependency("kwatcher", .{ .target = target, .optimize = opt }).module("kwatcher");
         const kwatcher_daemon_lib = b.addModule("kawatcher-daemon", .{
             .root_source_file = b.path("src/root.zig"),
         });
@@ -39,6 +45,8 @@ const Builder = struct {
         kwatcher_http.addImport("tokamak", tokamak);
         kwatcher_http.addImport("zmpl", zmpl);
         kwatcher_http.addImport("kwatcher-daemon", kwatcher_daemon_lib);
+        kwatcher_http.addImport("httpz", httpz);
+        kwatcher_http.addImport("metrics", metrics);
 
         const kwatcher_daemon = b.createModule(.{
             .root_source_file = b.path("src/daemon.zig"),
@@ -56,6 +64,8 @@ const Builder = struct {
             .kwatcher = kwatcher,
             .kwatcher_daemon = kwatcher_daemon,
             .kwatcher_http = kwatcher_http,
+            .metrics = metrics,
+            .httpz = httpz,
             .kwatcher_daemon_lib = kwatcher_daemon_lib,
             .zmpl = zmpl,
         };
@@ -69,6 +79,8 @@ const Builder = struct {
         step.linkSystemLibrary("rabbitmq.4");
         step.root_module.addImport("tokamak", self.tokamak);
         step.root_module.addImport("kwatcher", self.kwatcher);
+        step.root_module.addImport("httpz", self.httpz);
+        step.root_module.addImport("metrics", self.metrics);
         step.root_module.addImport("zmpl", self.zmpl);
         step.addLibraryPath(.{ .cwd_relative = "." });
         step.addLibraryPath(.{ .cwd_relative = "." });

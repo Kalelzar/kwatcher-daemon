@@ -1,8 +1,12 @@
-<article class="bg-zinc-800 rounded-xl p-4 shadow-xl shadow-zinc-900" hx-get="/api/rabbitmq/overview" hx-target="content" hx-trigger="every 3s">
+<article class="bg-zinc-800 rounded-xl p-4 shadow-xl shadow-zinc-900 relative" hx-get="/api/rabbitmq/overview" hx-target="content" x-data="{enabled: false}" hx-trigger="every 5s">
+  <div id="spinner" class="htmx-indicator items-center justify-items-center text-6xl text-white text-center absolute left-[50%] right-[50%] translate-x-[-50%] w-full h-full bg-[#222222CF]">
+    <p class="h-fit w-full absolute top-[50%] bottom-[50%] translate-y-[-50%]">Loading...<p>
+  </div>
   <div class="grid grid-cols-[0.99fr_auto]">
     <h2 class="text-2xl"> RabbitMQ Status</h2>
     <div class="grid grid-rows-[1fr] gap-1" x-data="{increment: 5, label: 'Refresh'}">
       <div class="w-full">
+        <input class="inline" type="checkbox" x-model="enabled"/>
         Auto-refresh: <span @tick.window="increment=increment > 1 ? increment-1 : 0;" x-text="increment"></span>
       </div>
       <button x-text="label" @tick.window="label=increment == 0 ? 'In progress...' : 'Refresh'" class="outline bg-zinc-700 p-1 pl-2 pr-2 rounded-xl w-full" hx-get="/api/rabbitmq/overview" hx-target="content"></button>

@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -11,10 +13,8 @@
   <body class="bg-zinc-600">
     <header class="flex flex-col bg-zinc-800 items-center p-4">
       <h1 class="text-white text-4xl"><a hx-get="/view/home" hx-target="#content">KWatcher</a></h1>
-    </header>
-    
-    <content class="flex flex-col items-center text-white m-4" id="#content" hx-get="/api/rabbitmq/overview" hx-trigger="load">
-      <p>Loading...</p>
+    </header>    
+    <content class="flex flex-col items-center text-white m-4" id="content" hx-get="/api/rabbitmq/overview" hx-trigger="load">
     </content>
   </body>
 </html>
