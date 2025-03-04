@@ -13,6 +13,8 @@ const Builder = struct {
     kwatcher_daemon_lib: *std.Build.Module,
     tokamak: *std.Build.Module,
     metrics: *std.Build.Module,
+    pg: *std.Build.Module,
+    uuid: *std.Build.Module,
     zmpl: *std.Build.Module,
 
     fn init(b: *std.Build) Builder {
@@ -29,7 +31,11 @@ const Builder = struct {
         const httpz = hz.module("httpz");
         const metrics = hz.builder.dependency("metrics", .{ .target = target, .optimize = opt }).module("metrics");
         const zmpl = b.dependency("zmpl", .{ .target = target, .optimize = opt }).module("zmpl");
-        const kwatcher = b.dependency("kwatcher", .{ .target = target, .optimize = opt }).module("kwatcher");
+        const kw = b.dependency("kwatcher", .{ .target = target, .optimize = opt });
+        const kwatcher = kw.module("kwatcher");
+        const uuid = kw.builder.dependency("uuid", .{ .target = target, .optimize = opt }).module("uuid");
+        const pg = b.dependency("pg", .{ .target = target, .optimize = opt }).module("pg");
+
         const kwatcher_daemon_lib = b.addModule("kawatcher-daemon", .{
             .root_source_file = b.path("src/root.zig"),
         });
@@ -37,16 +43,20 @@ const Builder = struct {
         kwatcher_daemon_lib.addImport("tokamak", tokamak);
         kwatcher_daemon_lib.addImport("kwatcher", kwatcher);
         kwatcher_daemon_lib.addImport("zmpl", zmpl);
+        kwatcher_daemon_lib.addImport("pg", pg);
+        kwatcher_daemon_lib.addImport("uuid", uuid);
 
         const kwatcher_http = b.createModule(.{
             .root_source_file = b.path("src/http.zig"),
         });
         kwatcher_http.link_libc = true;
+        kwatcher_http.addImport("pg", pg);
         kwatcher_http.addImport("tokamak", tokamak);
         kwatcher_http.addImport("zmpl", zmpl);
         kwatcher_http.addImport("kwatcher-daemon", kwatcher_daemon_lib);
         kwatcher_http.addImport("httpz", httpz);
         kwatcher_http.addImport("metrics", metrics);
+        kwatcher_http.addImport("uuid", uuid);
 
         const kwatcher_daemon = b.createModule(.{
             .root_source_file = b.path("src/daemon.zig"),
@@ -54,6 +64,8 @@ const Builder = struct {
         kwatcher_daemon.link_libc = true;
         kwatcher_daemon.addImport("kwatcher", kwatcher);
         kwatcher_daemon.addImport("kwatcher-daemon", kwatcher_daemon_lib);
+        kwatcher_daemon.addImport("pg", pg);
+        kwatcher_daemon.addImport("uuid", uuid);
 
         return .{
             .b = b,
@@ -68,6 +80,8 @@ const Builder = struct {
             .httpz = httpz,
             .kwatcher_daemon_lib = kwatcher_daemon_lib,
             .zmpl = zmpl,
+            .pg = pg,
+            .uuid = uuid,
         };
     }
 
@@ -82,6 +96,8 @@ const Builder = struct {
         step.root_module.addImport("httpz", self.httpz);
         step.root_module.addImport("metrics", self.metrics);
         step.root_module.addImport("zmpl", self.zmpl);
+        step.root_module.addImport("pg", self.pg);
+        step.root_module.addImport("uuid", self.uuid);
         step.addLibraryPath(.{ .cwd_relative = "." });
         step.addLibraryPath(.{ .cwd_relative = "." });
     }

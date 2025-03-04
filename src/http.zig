@@ -17,11 +17,11 @@ const App = struct {
     rabbitmq_service: model.RabbitMqService,
     server: *tk.Server,
     routes: []const tk.Route = &.{
-        metrics.track(&.{
-            .get("/", tk.static.file("static/index.html")),
-            .get("/metrics", metrics.route()),
-            template.templates(&.{
-                tk.logger(.{}, &.{
+        tk.logger(.{}, &.{
+            metrics.track(&.{
+                .get("/", tk.static.file("static/index.html")),
+                .get("/metrics", metrics.route()),
+                template.templates(&.{
                     .group("/api/system", &.{.router(api.system)}),
                     .group("/api/rabbitmq", &.{.router(api.rabbitmq)}),
                     .get("/openapi.json", tk.swagger.json(.{ .info = .{ .title = "KWatcher Daemon" } })),
