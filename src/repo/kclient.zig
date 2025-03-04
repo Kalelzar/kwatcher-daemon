@@ -1,3 +1,4 @@
+const std = @import("std");
 const pg = @import("pg");
 const uuid = @import("uuid");
 const kwatcher = @import("kwatcher");
@@ -32,16 +33,18 @@ pub fn getOrCreate(self: *KClientRepo, arena: *kwatcher.mem.InternalArena, clien
     );
     if (row) |_found| {
         var found = _found;
-        defer found.deinit() catch {};
-
         const data = try found.to(KClientRow, .{ .map = .name, .allocator = alloc });
+        found.deinit() catch {};
 
         return data;
     } else {
         const id = uuid.v7.new();
         const urn = uuid.urn.serialize(id);
 
-        _ = try self.conn.exec("INSERT INTO kclient (id, kname, kversion, host) VALUES ($1, $2, $3, $4)", .{ urn, client.name, client.version, user.hostname });
+        _ = try self.conn.exec(
+            "INSERT INTO kclient (id, kname, kversion, host) VALUES ($1, $2, $3, $4)",
+            .{ urn, client.name, client.version, user.hostname },
+        );
 
         return .{
             .id = &urn,
