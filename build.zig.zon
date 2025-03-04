@@ -27,19 +27,24 @@
             .url = "git+https://github.com/cztomsik/tokamak.git#88b6875782fa03b9a8408a80e142883968a59788",
             .hash = "122071c2c0adaa3fa3a27a872fdc0b2e762db515e3ef8c5b2225332141500e13f110",
         },
-        .kwatcher = .{
-            .url = "git+https://github.com/Kalelzar/kwatcher.git#0d762dbee0b0ef4d4aa9f749e438b71dc804468b",
-            .hash = "1220d5f025be9e33a6f4a537aa8edd1e29962d0d257b085085804993c7b676ac4848",
-        },
         .zmpl = .{
             .url = "git+https://github.com/jetzig-framework/zmpl.git#04d9fa7c3f6369790aac1fc64625e91222072ebc",
             .hash = "122078b3cd8ac2be7ba7b122312de7abee6de6be905287e2b3d80b09e5481a39e70f",
+        },
+        .pg = .{
+            .url = "git+https://github.com/karlseguin/pg.zig#0110cfdf387403a5a326115b5184861c4604d711",
+            .hash = "12205019ce2bc2e08c76352ea37a14600d412e5e0ecdd7ddd27b4e83a62f37d8ba94",
+        },
+        .kwatcher = .{
+            .url = "git+https://github.com/Kalelzar/kwatcher.git#e2ab327de9f89b2a0071698e20bb1ef3e53d89dc",
+            .hash = "1220ea84b3aaa4c75bc227a71dd3d613c60bd069abff961bde20c41a9ce5f0a629d4",
         },
     },
     .paths = .{
         "build.zig",
         "build.zig.zon",
         "src",
+        "static",
         // For example...
         //"LICENSE",
         //"README.md",
