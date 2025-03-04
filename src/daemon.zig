@@ -59,6 +59,7 @@ const SingletonDependencies = struct {
 
 const ScopedDependencies = struct {
     clientRepo: ?*repo.KClient = null,
+    eventRepo: ?*repo.KEvent = null,
 
     pub fn pgConnFactory(pool: *pg.Pool) !*pg.Conn {
         return pool.acquire();
@@ -84,9 +85,32 @@ const ScopedDependencies = struct {
         }
     }
 
+    pub fn eventRepoFactory(
+        self: *ScopedDependencies,
+        arena: *kwatcher.mem.InternalArena,
+        pool: *pg.Pool,
+    ) !*repo.KEvent {
+        if (self.eventRepo) |r| {
+            return r;
+        } else {
+            // We need to acquire a connection manually. Had we injected it, we would have to release it here instead.
+            // No need for the extra churn.
+            // Maybe we could add lazy evaluation in the future ;)
+            const conn = try pgConnFactory(pool);
+            errdefer conn.release();
+            const alloc = arena.allocator();
+            self.eventRepo = try alloc.create(repo.KEvent);
+            self.eventRepo.?.* = repo.KEvent.init(conn);
+            return self.eventRepo.?;
+        }
+    }
+
     pub fn deconstruct(self: *ScopedDependencies) void {
         if (self.clientRepo) |_| {
             self.clientRepo.?.deinit();
+        }
+        if (self.eventRepo) |_| {
+            self.eventRepo.?.deinit();
         }
     }
 };
