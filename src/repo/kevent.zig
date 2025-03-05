@@ -161,9 +161,6 @@ pub fn extendEvent(
 }
 
 pub fn extends(allocator: std.mem.Allocator, a: []const u8, b: []const u8) !bool {
-    // FIXME: This is obviously incorrect.
-    // They should be compared semantically.
-
     const pa = try std.json.parseFromSlice(std.json.Value, allocator, a, .{});
     defer pa.deinit();
     const pb = try std.json.parseFromSlice(std.json.Value, allocator, b, .{});
