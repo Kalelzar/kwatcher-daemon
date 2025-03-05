@@ -21,5 +21,33 @@
 <script>
   setInterval(() => {
       window.dispatchEvent(new CustomEvent('tick', { bubbles: true }));
-  }, 1000)
+  }, 1000);
+
+  function duration(microseconds) {
+      console.log("CONV");
+      let formatter = new Intl.DurationFormat("en", { style: "digital" });
+      
+      let milliseconds = Math.floor(microseconds / 1000);
+      microseconds -= milliseconds * 1000;
+      let seconds = Math.floor(milliseconds / 1000);
+      milliseconds -= seconds * 1000;
+      let minutes = Math.floor(seconds / 60);
+      seconds -= minutes * 60;
+      let hours = Math.floor(minutes / 60);
+      minutes -= hours * 60;
+      let days = Math.floor(hours / 24);
+      hours -= days * 24;
+      let years = Math.floor(days / 365.24); // More or less... The seconds don't account for Leapseconds either. And no browser has Temporal.Duration as of the time of writing.
+      days -= Math.floor(years * 365.24);
+
+      return formatter.format({
+          milliseconds: milliseconds,
+          microseconds: microseconds,
+          seconds: seconds,
+          minutes: minutes,
+          hours: hours,
+          days: days,
+          years: years,
+      });
+  };
 </script>
