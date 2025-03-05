@@ -4,6 +4,7 @@ const uuid = @import("uuid");
 const kwatcher = @import("kwatcher");
 const KClient = @import("kclient.zig");
 const json = @import("../json.zig");
+const Cursor = @import("../models/query.zig").Cursor;
 
 const KEventRepo = @This();
 
@@ -25,8 +26,58 @@ pub fn init(conn: *pg.Conn) KEventRepo {
     };
 }
 
+pub const FromPool = struct {
+    conn: *pg.Conn,
+    repo: KEventRepo,
+    pub fn init(pool: *pg.Pool) !FromPool {
+        const conn = try pool.acquire();
+        return .{
+            .conn = conn,
+            .repo = KEventRepo.init(conn),
+        };
+    }
+
+    pub fn yield(self: *FromPool) *KEventRepo {
+        return &self.repo;
+    }
+
+    pub fn deinit(self: *FromPool) void {
+        self.conn.release();
+    }
+};
+
 pub fn deinit(self: *KEventRepo) void {
     self.conn.release();
+}
+pub fn get(self: *KEventRepo, allocator: std.mem.Allocator, cursor: Cursor) !std.ArrayListUnmanaged(KEventRow) {
+    const query =
+        \\ select * from kevent
+        \\    order by end_time DESC
+        \\    limit $2
+        \\    offset $1;
+    ;
+
+    const result = try self.conn.queryOpts(
+        query,
+        .{ cursor.drop, cursor.take },
+        .{
+            .column_names = true,
+            .allocator = allocator,
+        },
+    );
+    defer result.deinit();
+
+    var arr = try std.ArrayListUnmanaged(KEventRow).initCapacity(allocator, result.number_of_columns);
+
+    while (try result.next()) |row| {
+        const data = try row.to(KEventRow, .{ .map = .name, .allocator = allocator });
+        try arr.append(
+            allocator,
+            data,
+        );
+    }
+
+    return arr;
 }
 
 pub fn bump(
@@ -112,7 +163,10 @@ pub fn extendEvent(
         \\    limit 1;
     ,
         .{ event_type, user.id, client.id },
-        .{ .column_names = true },
+        .{
+            .column_names = true,
+            .allocator = alloc,
+        },
     );
     if (row) |_found| {
         // This event exists and we should extend it.
