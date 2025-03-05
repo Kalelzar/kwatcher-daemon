@@ -1,6 +1,7 @@
 const std = @import("std");
 const tk = @import("tokamak");
 const httpz = @import("httpz");
+const pg = @import("pg");
 const m = @import("metrics");
 
 var metrics = m.initializeNoop(Metrics);
@@ -30,6 +31,7 @@ fn sendMetrics(context: *tk.Context) !void {
     context.res.header("content-type", "text/plain; version=0.0.4");
     const writer = context.res.writer();
     try httpz.writeMetrics(writer);
+    try pg.writeMetrics(writer);
     try write(writer);
     context.responded = true;
 }
