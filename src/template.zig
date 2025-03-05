@@ -27,7 +27,6 @@ pub const Template = struct {
 
         context.res.header("content-type", "text/html");
         context.res.header("cache-control", "no-cache, no-store, must-revalidate");
-        std.log.info("Sending: {s}", .{body});
         context.res.body = body;
         context.responded = true;
     }

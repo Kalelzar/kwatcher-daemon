@@ -5,9 +5,12 @@
       <table class="container">
         <thead>
           <tr>
+            <th scope="column" class="bg-zinc-700 p-1">User</th>
             <th scope="column" class="bg-zinc-700 p-1">From</th>
             <th scope="column" class="bg-zinc-700 p-1">To</th>
+            <th scope="column" class="bg-zinc-700 p-1">Duration</th>
             <th scope="column" class="bg-zinc-700 p-1">Event</th>
+            <th scope="column" class="bg-zinc-700 p-1">Data</th>
           </tr>
         </thead>
         <tbody>

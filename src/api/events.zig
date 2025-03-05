@@ -20,9 +20,13 @@ pub fn @"GET /get?"(arena: *std.heap.ArenaAllocator, data: *zmpl.Data, event_ser
         try obj.put("event_type", event.event_type);
         try obj.put("from", event.start_time);
         try obj.put("to", event.end_time);
+        try obj.put("duration", event.end_time - event.start_time);
+        try obj.put("user_id", event.user_id);
+        try obj.put("data", event.properties);
         try events.append(obj);
     }
     try root.put("index", cursor.drop + cursor.take);
+    try root.put("is_at_end", rows.items.len < cursor.take);
     return template.Template.init("list_events");
 }
 
