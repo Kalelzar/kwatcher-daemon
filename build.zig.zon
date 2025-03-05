@@ -6,16 +6,17 @@
     //
     // It is redundant to include "zig" in this name because it is already
     // within the Zig package namespace.
-    .name = "kwatcher-daemon",
+    .name = .kwatcher_daemon,
 
     // This is a [Semantic Version](https://semver.org/).
     // In a future version of Zig it will be used for package deduplication.
-    .version = "0.0.0",
+    .version = "0.1.0",
 
     // This field is optional.
     // This is currently advisory only; Zig does not yet do anything
     // with this value.
-    //.minimum_zig_version = "0.11.0",
+    .minimum_zig_version = "0.14.0",
+    .fingerprint = 0x2527480e777bcb59,
 
     // This field is optional.
     // Each dependency must either provide a `url` and `hash`, or a `path`.
@@ -25,19 +26,19 @@
     .dependencies = .{
         .tokamak = .{
             .url = "git+https://github.com/cztomsik/tokamak.git#88b6875782fa03b9a8408a80e142883968a59788",
-            .hash = "122071c2c0adaa3fa3a27a872fdc0b2e762db515e3ef8c5b2225332141500e13f110",
+            .hash = "tokamak-2.0.0-AAAAAKG8AQBxwsCtqj-jonqHL9wLLnYttRXj74xbIiUz",
         },
         .zmpl = .{
-            .url = "git+https://github.com/jetzig-framework/zmpl.git#04d9fa7c3f6369790aac1fc64625e91222072ebc",
-            .hash = "122078b3cd8ac2be7ba7b122312de7abee6de6be905287e2b3d80b09e5481a39e70f",
+            .url = "git+https://github.com/jetzig-framework/zmpl.git#3ec11289fdee2e0c70975cb5dd85d3041d723912",
+            .hash = "zmpl-0.0.1-SYFGBuZoAwAMuvHNkO_1BbutpWhg7CdSgYd8t4OaaZeR",
         },
         .pg = .{
-            .url = "git+https://github.com/karlseguin/pg.zig#0110cfdf387403a5a326115b5184861c4604d711",
-            .hash = "12205019ce2bc2e08c76352ea37a14600d412e5e0ecdd7ddd27b4e83a62f37d8ba94",
+            .url = "git+https://github.com/karlseguin/pg.zig#c4c851192e6e55ec793836c991afdd1a5c747276",
+            .hash = "pg-0.0.0-Wp_7gbPdBQCcAZ9ItP9sGNlJ7hBCNG_Z9eyZZBDRhszy",
         },
         .kwatcher = .{
-            .url = "git+https://github.com/Kalelzar/kwatcher.git#e2ab327de9f89b2a0071698e20bb1ef3e53d89dc",
-            .hash = "1220ea84b3aaa4c75bc227a71dd3d613c60bd069abff961bde20c41a9ce5f0a629d4",
+            .url = "git+https://github.com/Kalelzar/kwatcher.git#ac47f554223c75c32eb098e843fae80631ff92b2",
+            .hash = "kwatcher-0.1.0-VYVPxjEWAQBjfLS9qtsr7oSXZCnrP1KcOnTvUeX1EHgS",
         },
     },
     .paths = .{
