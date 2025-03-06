@@ -28,7 +28,7 @@ pub fn @"consume amq.direct/heartbeat"(
 
     _ = try kevent_repo.extendEvent(
         heartbeat.event,
-        heartbeat.timestamp * std.time.us_per_s, // FIXME: Currently the timestamp is in seconds. It should be in us.
+        heartbeat.timestamp,
         props,
         arena,
         client,
