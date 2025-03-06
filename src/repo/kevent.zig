@@ -1,4 +1,5 @@
 const std = @import("std");
+const log = std.log.scoped(.kevent);
 const pg = @import("pg");
 const uuid = @import("uuid");
 const kwatcher = @import("kwatcher");
@@ -57,14 +58,27 @@ pub fn get(self: *KEventRepo, allocator: std.mem.Allocator, cursor: Cursor) !std
         \\    offset $1;
     ;
 
-    const result = try self.conn.queryOpts(
+    const result = self.conn.queryOpts(
         query,
         .{ cursor.drop, cursor.take },
         .{
             .column_names = true,
             .allocator = allocator,
         },
-    );
+    ) catch |e| switch (e) {
+        error.PG => {
+            if (self.conn.err) |pge| {
+                log.err(
+                    "[{s}] Encountered an error ({s}) while retrieving a client: \n{s}\n",
+                    .{ pge.severity, pge.code, pge.message },
+                );
+            } else {
+                log.err("Encountered an unknown error while retrieving a client.\n", .{});
+            }
+            return e;
+        },
+        else => return e,
+    };
     defer result.deinit();
 
     var arr = try std.ArrayListUnmanaged(KEventRow).initCapacity(allocator, result.number_of_columns);
@@ -91,10 +105,23 @@ pub fn bump(
         \\ where id = $2
     ;
 
-    _ = try self.conn.exec(
+    _ = self.conn.exec(
         query,
         .{ new_end_time, event.id },
-    );
+    ) catch |e| switch (e) {
+        error.PG => {
+            if (self.conn.err) |pge| {
+                log.err(
+                    "[{s}] Encountered an error ({s}) while updating an event: \n{s}\n",
+                    .{ pge.severity, pge.code, pge.message },
+                );
+            } else {
+                log.err("Encountered an unknown error while updating an event.\n", .{});
+            }
+            return e;
+        },
+        else => return e,
+    };
 
     return KEventRow{
         .id = event.id,
@@ -121,7 +148,7 @@ pub fn createEvent(
     ;
     const id = uuid.v7.new();
     const urn = uuid.urn.serialize(id);
-    _ = try self.conn.exec(
+    _ = self.conn.exec(
         query,
         .{
             &urn,
@@ -132,7 +159,20 @@ pub fn createEvent(
             time,
             body,
         },
-    );
+    ) catch |e| switch (e) {
+        error.PG => {
+            if (self.conn.err) |pge| {
+                log.err(
+                    "[{s}] Encountered an error ({s}) while creating an event: \n{s}\n",
+                    .{ pge.severity, pge.code, pge.message },
+                );
+            } else {
+                log.err("Encountered an unknown error while creating an event.\n", .{});
+            }
+            return e;
+        },
+        else => return e,
+    };
 
     return .{
         .id = &urn,
@@ -156,7 +196,7 @@ pub fn extendEvent(
 ) !KEventRow {
     const alloc = arena.allocator();
     //const current_time = std.time.microTimestamp();
-    const row = try self.conn.rowOpts(
+    const row = self.conn.rowOpts(
         \\ select * from kevent
         \\    where event_type = $1 and user_id = $2 and kclient = $3
         \\    order by end_time DESC
@@ -167,7 +207,23 @@ pub fn extendEvent(
             .column_names = true,
             .allocator = alloc,
         },
-    );
+    ) catch |e| switch (e) {
+        error.PG => {
+            if (self.conn.err) |pge| {
+                log.err(
+                    "[{s}] Encountered an error ({s}) while retrieving the latest event of type {s}: \n{s}\n",
+                    .{ pge.severity, pge.code, event_type, pge.message },
+                );
+            } else {
+                log.err(
+                    "Encountered an unknown error while retrieving the latest event of type {s}.\n",
+                    .{event_type},
+                );
+            }
+            return e;
+        },
+        else => return e,
+    };
     if (row) |_found| {
         // This event exists and we should extend it.
         // This is actually fairly involved as we have to check several things.

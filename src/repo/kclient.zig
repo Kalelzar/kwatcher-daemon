@@ -1,4 +1,5 @@
 const std = @import("std");
+const log = std.log.scoped(.kclient);
 const pg = @import("pg");
 const uuid = @import("uuid");
 const kwatcher = @import("kwatcher");
@@ -26,11 +27,24 @@ pub fn deinit(self: *KClientRepo) void {
 
 pub fn getOrCreate(self: *KClientRepo, arena: *kwatcher.mem.InternalArena, client: kwatcher.schema.ClientInfo, user: kwatcher.schema.UserInfo) !KClientRow {
     const alloc = arena.allocator();
-    const row = try self.conn.rowOpts(
+    const row = self.conn.rowOpts(
         "select * from kclient where kname = $1 and kversion = $2 and host = $3 limit 1",
         .{ client.name, client.version, user.hostname },
         .{ .column_names = true },
-    );
+    ) catch |e| switch (e) {
+        error.PG => {
+            if (self.conn.err) |pge| {
+                log.err(
+                    "[{s}] Encountered an error ({s}) while retrieving a client: \n{s}\n",
+                    .{ pge.severity, pge.code, pge.message },
+                );
+            } else {
+                log.err("Encountered an unknown error while retrieving a client.\n", .{});
+            }
+            return e;
+        },
+        else => return e,
+    };
     if (row) |_found| {
         var found = _found;
         const data = try found.to(KClientRow, .{ .map = .name, .allocator = alloc });
