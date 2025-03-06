@@ -23,11 +23,21 @@ pub const Template = struct {
     }
 
     pub fn sendResponseWithData(self: *const Template, context: *tk.Context, data: *zmpl.Data) !void {
-        const body = try self.template.render(data, TemplateData, templateData, .{});
+        if (context.req.header("accept")) |accept| {
+            std.log.info("client requested: {s}", .{accept});
+            if (std.mem.eql(u8, accept, "application/json")) {
+                const body = try data.toJson();
+                context.res.header("content-type", "applicaton/json");
+                context.res.header("cache-control", "no-cache, no-store, must-revalidate");
+                context.res.body = body;
+            } else {
+                const body = try self.template.render(data, TemplateData, templateData, .{});
+                context.res.header("content-type", "text/html");
+                context.res.header("cache-control", "no-cache, no-store, must-revalidate");
+                context.res.body = body;
+            }
+        }
 
-        context.res.header("content-type", "text/html");
-        context.res.header("cache-control", "no-cache, no-store, must-revalidate");
-        context.res.body = body;
         context.responded = true;
     }
 };
