@@ -2,9 +2,9 @@
   <h2 class="text-2xl">Events</h2>
   <div class="border-t border-white mt-4 pt-4">
     <div class="rounded-xl p-2 bg-zinc-700 inset-shadow-sm inset-shadow-zinc-600">
-      <table class="container">
+      <table class="w-full">
         <thead>
-          <tr>
+          <tr class="sticky top-0 bg-zinc-800/95 backdrop-blur-sm z-2">
             <th scope="column" class="bg-zinc-700 p-1">User</th>
             <th scope="column" class="bg-zinc-700 p-1">From</th>
             <th scope="column" class="bg-zinc-700 p-1">To</th>

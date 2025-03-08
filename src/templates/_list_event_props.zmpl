@@ -1,7 +1,7 @@
 @args props: []const u8
 @html INNER
 <td scope="row"
-    class="flex gap-4 align-center justify-center bg-zinc-700 text-lg p-1"
+    class="flex gap-4 align-center justify-end bg-zinc-700 text-lg p-1"
     x-data="{
               props: JSON.parse('{{props}}'),
             }">

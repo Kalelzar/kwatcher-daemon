@@ -9,8 +9,8 @@ const EventService = @import("../service/events.zig");
 const model = @import("../model.zig");
 const template = @import("../template.zig");
 
-pub fn @"GET /get?"(arena: *std.heap.ArenaAllocator, data: *zmpl.Data, event_service: *EventService, cursor: Cursor) !template.Template {
-    const alloc = arena.allocator();
+pub fn @"GET /get?"(req: tk.Request, data: *zmpl.Data, event_service: *EventService, cursor: Cursor) !template.Template {
+    const alloc = req.arena;
     const rows = try event_service.get(alloc, cursor);
     const root = try data.object();
     const events = try data.array();
@@ -25,7 +25,7 @@ pub fn @"GET /get?"(arena: *std.heap.ArenaAllocator, data: *zmpl.Data, event_ser
         try obj.put("data", event.properties);
         try events.append(obj);
     }
-    try root.put("index", cursor.drop + cursor.take);
+    try root.put("index", cursor.drop + @min(rows.items.len, cursor.take));
     try root.put("is_at_end", rows.items.len < cursor.take);
     return template.Template.init("list_events");
 }

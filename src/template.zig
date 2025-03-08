@@ -24,7 +24,6 @@ pub const Template = struct {
 
     pub fn sendResponseWithData(self: *const Template, context: *tk.Context, data: *zmpl.Data) !void {
         if (context.req.header("accept")) |accept| {
-            std.log.info("client requested: {s}", .{accept});
             if (std.mem.eql(u8, accept, "application/json")) {
                 const body = try data.toJson();
                 context.res.header("content-type", "applicaton/json");
