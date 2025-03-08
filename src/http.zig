@@ -3,12 +3,14 @@ const tk = @import("tokamak");
 const zmpl = @import("zmpl");
 const pg = @import("pg");
 const kwatcher = @import("kwatcher");
+const KWatcherClient = @import("alias.zig").KWatcherClient;
 const api = @import("api.zig");
 const model = @import("model.zig");
 const template = @import("template.zig");
 const metrics = @import("metrics.zig");
 const EventService = @import("service/events.zig");
 const KEventRepo = @import("kwatcher-daemon").repo.KEvent;
+const Config = @import("config.zig").Config;
 
 fn notFound(context: *tk.Context, data: *zmpl.Data) !template.Template {
     _ = try data.object();
@@ -21,6 +23,7 @@ const App = struct {
     event_repo: KEventRepo.FromPool,
     event_service: EventService,
     server: *tk.Server,
+    kwatcher_client: *KWatcherClient,
     routes: []const tk.Route = &.{
         tk.logger(.{}, &.{
             metrics.track(&.{
@@ -38,27 +41,12 @@ const App = struct {
     },
 };
 
-const Config = struct {
-    daemon: struct {
-        postgre: struct {
-            pool_size: u8 = 5,
-            port: u16 = 5432,
-            host: []const u8 = "127.0.0.1",
-            auth: struct {
-                username: []const u8,
-                password: []const u8,
-                database: []const u8 = "kwatcher",
-                timeout: u16 = 10000,
-            },
-        },
-    },
-};
-
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
     var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
 
     const merged_config = try kwatcher.config.findConfigFileWithDefaults(
         Config,
@@ -82,15 +70,18 @@ pub fn main() !void {
     });
     defer ptr.deinit();
 
+    var kwatcher_client = try KWatcherClient.init(allocator, .{});
+    try kwatcher_client.configure();
+
     const root = tk.Injector.init(&.{
         &gpa.allocator(),
-        &arena,
         &tk.ServerOptions{
             .listen = .{
                 .hostname = "0.0.0.0",
                 .port = 8080,
             },
         },
+        &kwatcher_client,
         ptr,
     }, null);
 

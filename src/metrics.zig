@@ -3,6 +3,7 @@ const tk = @import("tokamak");
 const httpz = @import("httpz");
 const pg = @import("pg");
 const m = @import("metrics");
+const KWatcherClient = @import("alias.zig").KWatcherClient;
 
 var metrics = m.initializeNoop(Metrics);
 
@@ -29,6 +30,9 @@ pub fn write(writer: anytype) !void {
 
 fn sendMetrics(context: *tk.Context) !void {
     context.res.header("content-type", "text/plain; version=0.0.4");
+
+    const client = try context.injector.get(*KWatcherClient);
+    try client.handleConsume(std.time.ns_per_s / 200);
     const writer = context.res.writer();
     try httpz.writeMetrics(writer);
     try pg.writeMetrics(writer);
