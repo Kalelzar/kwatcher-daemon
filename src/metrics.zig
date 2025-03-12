@@ -52,6 +52,13 @@ pub fn write(writer: anytype) !void {
 
 fn sendMetrics(context: *tk.Context) !void {
     context.res.header("content-type", "text/plain; version=0.0.4");
+
+    const client = try context.injector.get(*KWatcherClient);
+    client.handleConsume(std.time.ns_per_s / 200) catch {
+        try client.reset();
+    };
+    const writer = context.res.writer();
+
     var iter = metrics.timeOfLastUpdate.impl.values.iterator();
     const now = std.time.timestamp();
     while (iter.next()) |entry| {
@@ -61,9 +68,6 @@ fn sendMetrics(context: *tk.Context) !void {
             try down(.{ .job = entry.key_ptr.*.job });
         }
     }
-    const client = try context.injector.get(*KWatcherClient);
-    try client.handleConsume(std.time.ns_per_s / 200); // TODO: This should be configurable
-    const writer = context.res.writer();
 
     var collected_iter = collected.valueIterator();
     while (collected_iter.next()) |collected_metrics| {
@@ -78,7 +82,10 @@ fn sendMetrics(context: *tk.Context) !void {
 pub fn route() tk.Route {
     const H = struct {
         fn handleMetrics(context: *tk.Context) anyerror!void {
-            return sendMetrics(context);
+            sendMetrics(context) catch |e| {
+                std.log.err("Encountered error while sending metrics: {}", .{e});
+            };
+            return;
         }
     };
     return .{ .handler = &H.handleMetrics };
