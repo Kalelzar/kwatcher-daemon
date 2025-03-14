@@ -44,83 +44,86 @@ const App = struct {
 };
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa = std.heap.GeneralPurposeAllocator(.{ .safety = true }){};
     defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    {
+        const allocator = gpa.allocator();
 
-    var instr_allocator = metrics.instrumentAllocator(allocator);
-    const alloc = instr_allocator.allocator();
-    try metrics.initialize(alloc, .{});
-    defer metrics.deinitialize();
+        var instr_allocator = metrics.instrumentAllocator(allocator);
+        const alloc = instr_allocator.allocator();
+        try metrics.initialize(alloc, .{});
+        defer metrics.deinitialize();
 
-    var instr_page_allocator = metrics.instrumentAllocator(std.heap.page_allocator);
-    const page_allocator = instr_page_allocator.allocator();
-    var arena = std.heap.ArenaAllocator.init(page_allocator);
-    defer arena.deinit();
+        var instr_page_allocator = metrics.instrumentAllocator(std.heap.page_allocator);
+        const page_allocator = instr_page_allocator.allocator();
+        var arena = std.heap.ArenaAllocator.init(page_allocator);
+        defer arena.deinit();
 
-    const merged_config = try kwatcher.config.findConfigFileWithDefaults(
-        Config,
-        "server",
-        &arena,
-    );
-    const config = merged_config.value;
+        const merged_config = try kwatcher.config.findConfigFileWithDefaults(
+            Config,
+            "server",
+            &arena,
+        );
+        const config = merged_config.value;
 
-    const ptr = try pg.Pool.init(alloc, .{
-        .size = config.daemon.postgre.pool_size,
-        .connect = .{
-            .port = config.daemon.postgre.port,
-            .host = config.daemon.postgre.host,
-        },
-        .auth = .{
-            .username = config.daemon.postgre.auth.username,
-            .password = config.daemon.postgre.auth.password,
-            .database = config.daemon.postgre.auth.database,
-            .timeout = config.daemon.postgre.auth.timeout,
-        },
-    });
-    defer ptr.deinit();
-
-    var singleton = KWatcherSingleton{};
-    var kwatcher_client = try KWatcherClient.init(alloc, &singleton);
-    defer kwatcher_client.deinit();
-    try kwatcher_client.configure();
-
-    const root = tk.Injector.init(&.{
-        &alloc,
-        &tk.ServerOptions{
-            .listen = .{
-                .hostname = "0.0.0.0",
-                .port = 8080,
+        const ptr = try pg.Pool.init(alloc, .{
+            .size = config.daemon.postgre.pool_size,
+            .connect = .{
+                .port = config.daemon.postgre.port,
+                .host = config.daemon.postgre.host,
             },
-        },
-        &kwatcher_client,
-        ptr,
-    }, null);
+            .auth = .{
+                .username = config.daemon.postgre.auth.username,
+                .password = config.daemon.postgre.auth.password,
+                .database = config.daemon.postgre.auth.database,
+                .timeout = config.daemon.postgre.auth.timeout,
+            },
+        });
+        defer ptr.deinit();
 
-    var app: App = undefined;
-    const injector = try tk.Module(App).init(&app, &root);
-    defer tk.Module(App).deinit(injector);
+        var singleton = KWatcherSingleton{};
+        var kwatcher_client = try KWatcherClient.init(alloc, &singleton);
+        defer kwatcher_client.deinit();
+        try kwatcher_client.configure();
 
-    if (comptime builtin.os.tag == .linux) {
-        // call our shutdown function (below) when
-        // SIGINT or SIGTERM are received
-        std.posix.sigaction(std.posix.SIG.INT, &.{
-            .handler = .{ .handler = shutdown },
-            .mask = std.posix.empty_sigset,
-            .flags = 0,
+        const root = tk.Injector.init(&.{
+            &alloc,
+            &tk.ServerOptions{
+                .listen = .{
+                    .hostname = "0.0.0.0",
+                    .port = 8080,
+                },
+            },
+            &kwatcher_client,
+            ptr,
         }, null);
-        std.posix.sigaction(std.posix.SIG.TERM, &.{
-            .handler = .{ .handler = shutdown },
-            .mask = std.posix.empty_sigset,
-            .flags = 0,
-        }, null);
-    }
 
-    if (injector.find(*tk.Server)) |server| {
-        server.injector = injector;
-        server_instance = server;
-        try server.start();
+        var app: App = undefined;
+        const injector = try tk.Module(App).init(&app, &root);
+        defer tk.Module(App).deinit(injector);
+
+        if (comptime builtin.os.tag == .linux) {
+            // call our shutdown function (below) when
+            // SIGINT or SIGTERM are received
+            std.posix.sigaction(std.posix.SIG.INT, &.{
+                .handler = .{ .handler = shutdown },
+                .mask = std.posix.empty_sigset,
+                .flags = 0,
+            }, null);
+            std.posix.sigaction(std.posix.SIG.TERM, &.{
+                .handler = .{ .handler = shutdown },
+                .mask = std.posix.empty_sigset,
+                .flags = 0,
+            }, null);
+        }
+
+        if (injector.find(*tk.Server)) |server| {
+            server.injector = injector;
+            server_instance = server;
+            try server.start();
+        }
     }
+    _ = gpa.detectLeaks();
 }
 
 var server_instance: ?*tk.Server = null;
