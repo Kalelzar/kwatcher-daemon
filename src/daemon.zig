@@ -127,10 +127,10 @@ const EventProvider = struct {
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+
     const allocator = gpa.allocator();
 
     var singleton = SingletonDependencies{};
-    defer singleton.deinit();
 
     var server = try kwatcher.server.Server(
         "daemon",
@@ -140,8 +140,11 @@ pub fn main() !void {
         Config,
         routes,
         EventProvider,
-    ).init(allocator, singleton);
+    ).init(allocator, &singleton);
     defer server.deinit();
+    defer singleton.deinit(); // Defers are executed bottom-to-top so we schedule the singleton
+    // to be before the server so the arena is still alive and we don't (occasionally) segfault
+    // This is a very annoying foot-gun.
 
     try server.start();
 }
