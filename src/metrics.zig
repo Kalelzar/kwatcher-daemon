@@ -7,7 +7,7 @@ const kwatcher = @import("kwatcher");
 const KWatcherClient = @import("alias.zig").KWatcherClient;
 
 var metrics = m.initializeNoop(Metrics);
-pub var collected = std.StringHashMapUnmanaged([]const u8){};
+pub var collected: std.BufMap = undefined;
 
 const Metrics = struct {
     statuses: Status,
@@ -39,11 +39,19 @@ pub fn down(labels: Metrics.UpL) !void {
 }
 
 pub fn initialize(allocator: std.mem.Allocator, comptime opts: m.RegistryOpts) !void {
+    collected = std.BufMap.init(allocator);
     metrics = .{
         .statuses = try Metrics.Status.init(allocator, "kwatcher_https_statuses", .{}, opts),
         .up = try Metrics.Up.init(allocator, "up", .{}, opts),
         .timeOfLastUpdate = try Metrics.TimeOfLastUpdate.init(allocator, "kwatcher_time_of_last_update", .{}, opts),
     };
+}
+
+pub fn deinitialize() void {
+    metrics.statuses.deinit();
+    metrics.up.deinit();
+    metrics.timeOfLastUpdate.deinit();
+    collected.deinit();
 }
 
 pub fn write(writer: anytype) !void {
@@ -54,6 +62,7 @@ fn sendMetrics(context: *tk.Context) !void {
     context.res.header("content-type", "text/plain; version=0.0.4");
 
     const client = try context.injector.get(*KWatcherClient);
+    defer client.deps.internal_arena.reset();
     client.handleConsume(std.time.ns_per_s / 200) catch {
         try client.reset();
     };
@@ -69,12 +78,13 @@ fn sendMetrics(context: *tk.Context) !void {
         }
     }
 
-    var collected_iter = collected.valueIterator();
+    var collected_iter = collected.hash_map.valueIterator();
     while (collected_iter.next()) |collected_metrics| {
         try writer.writeAll(collected_metrics.*);
     }
     try httpz.writeMetrics(writer);
     try pg.writeMetrics(writer);
+    try kwatcher.metrics.write(writer);
     try write(writer);
     context.responded = true;
 }

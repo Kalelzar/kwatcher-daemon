@@ -4,6 +4,7 @@ const zmpl = @import("zmpl");
 const pg = @import("pg");
 const kwatcher = @import("kwatcher");
 const KWatcherClient = @import("alias.zig").KWatcherClient;
+const KWatcherSingleton = @import("alias.zig").Singleton;
 const api = @import("api.zig");
 const model = @import("model.zig");
 const template = @import("template.zig");
@@ -70,7 +71,9 @@ pub fn main() !void {
     });
     defer ptr.deinit();
 
-    var kwatcher_client = try KWatcherClient.init(allocator, .{});
+    var singleton = KWatcherSingleton{};
+    var kwatcher_client = try KWatcherClient.init(allocator, &singleton);
+    defer kwatcher_client.deinit();
     try kwatcher_client.configure();
 
     const root = tk.Injector.init(&.{
@@ -86,6 +89,7 @@ pub fn main() !void {
     }, null);
 
     try metrics.initialize(allocator, .{});
+    defer metrics.deinitialize();
 
     var app: App = undefined;
     const injector = try tk.Module(App).init(&app, &root);
