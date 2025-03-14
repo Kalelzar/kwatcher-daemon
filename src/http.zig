@@ -46,7 +46,15 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
-    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+
+    var instr_allocator = metrics.instrumentAllocator(allocator);
+    const alloc = instr_allocator.allocator();
+    try metrics.initialize(alloc, .{});
+    defer metrics.deinitialize();
+
+    var instr_page_allocator = metrics.instrumentAllocator(std.heap.page_allocator);
+    const page_allocator = instr_page_allocator.allocator();
+    var arena = std.heap.ArenaAllocator.init(page_allocator);
     defer arena.deinit();
 
     const merged_config = try kwatcher.config.findConfigFileWithDefaults(
@@ -56,7 +64,7 @@ pub fn main() !void {
     );
     const config = merged_config.value;
 
-    const ptr = try pg.Pool.init(allocator, .{
+    const ptr = try pg.Pool.init(alloc, .{
         .size = config.daemon.postgre.pool_size,
         .connect = .{
             .port = config.daemon.postgre.port,
@@ -72,12 +80,12 @@ pub fn main() !void {
     defer ptr.deinit();
 
     var singleton = KWatcherSingleton{};
-    var kwatcher_client = try KWatcherClient.init(allocator, &singleton);
+    var kwatcher_client = try KWatcherClient.init(alloc, &singleton);
     defer kwatcher_client.deinit();
     try kwatcher_client.configure();
 
     const root = tk.Injector.init(&.{
-        &gpa.allocator(),
+        &alloc,
         &tk.ServerOptions{
             .listen = .{
                 .hostname = "0.0.0.0",
@@ -87,9 +95,6 @@ pub fn main() !void {
         &kwatcher_client,
         ptr,
     }, null);
-
-    try metrics.initialize(allocator, .{});
-    defer metrics.deinitialize();
 
     var app: App = undefined;
     const injector = try tk.Module(App).init(&app, &root);

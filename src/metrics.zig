@@ -13,7 +13,10 @@ const Metrics = struct {
     statuses: Status,
     up: Up,
     timeOfLastUpdate: TimeOfLastUpdate,
+    total_memory_allocated: MemUsage,
+    peak_memory_allocated: MemUsage,
 
+    const MemUsage = m.Gauge(i64);
     const StatusL = struct { status: u16 };
     const Status = m.CounterVec(u32, StatusL);
     const UpL = struct { job: []const u8 };
@@ -41,6 +44,16 @@ pub fn down(labels: Metrics.UpL) !void {
 pub fn initialize(allocator: std.mem.Allocator, comptime opts: m.RegistryOpts) !void {
     collected = std.BufMap.init(allocator);
     metrics = .{
+        .total_memory_allocated = Metrics.MemUsage.init(
+            "kwatcher_total_memory_bytes",
+            .{ .help = "The total allocated memory by the kwatcher" },
+            opts,
+        ),
+        .peak_memory_allocated = Metrics.MemUsage.init(
+            "kwatcher_peak_memory_bytes",
+            .{ .help = "The maximum allocated memory by the kwatcher" },
+            opts,
+        ),
         .statuses = try Metrics.Status.init(allocator, "kwatcher_https_statuses", .{}, opts),
         .up = try Metrics.Up.init(allocator, "up", .{}, opts),
         .timeOfLastUpdate = try Metrics.TimeOfLastUpdate.init(allocator, "kwatcher_time_of_last_update", .{}, opts),
@@ -52,6 +65,28 @@ pub fn deinitialize() void {
     metrics.up.deinit();
     metrics.timeOfLastUpdate.deinit();
     collected.deinit();
+}
+
+pub fn alloc(size: usize) void {
+    metrics.total_memory_allocated.incrBy(@as(i64, @intCast(size)));
+    const max = metrics.peak_memory_allocated.impl.value;
+    const current = metrics.total_memory_allocated.impl.value;
+    if (max < current)
+        metrics.peak_memory_allocated.set(current);
+}
+
+pub fn free(size: usize) void {
+    metrics.total_memory_allocated.incrBy(-@as(i64, @intCast(size)));
+}
+
+pub fn instrumentAllocator(allocator: std.mem.Allocator) kwatcher.mem.InstrumentedAllocator {
+    return kwatcher.mem.InstrumentedAllocator.init(
+        allocator,
+        .{
+            .free = &free,
+            .alloc = &alloc,
+        },
+    );
 }
 
 pub fn write(writer: anytype) !void {
