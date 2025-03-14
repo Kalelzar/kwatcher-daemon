@@ -12,6 +12,7 @@ const metrics = @import("metrics.zig");
 const EventService = @import("service/events.zig");
 const KEventRepo = @import("kwatcher-daemon").repo.KEvent;
 const Config = @import("config.zig").Config;
+const builtin = @import("builtin");
 
 fn notFound(context: *tk.Context, data: *zmpl.Data) !template.Template {
     _ = try data.object();
@@ -100,8 +101,33 @@ pub fn main() !void {
     const injector = try tk.Module(App).init(&app, &root);
     defer tk.Module(App).deinit(injector);
 
+    if (comptime builtin.os.tag == .linux) {
+        // call our shutdown function (below) when
+        // SIGINT or SIGTERM are received
+        std.posix.sigaction(std.posix.SIG.INT, &.{
+            .handler = .{ .handler = shutdown },
+            .mask = std.posix.empty_sigset,
+            .flags = 0,
+        }, null);
+        std.posix.sigaction(std.posix.SIG.TERM, &.{
+            .handler = .{ .handler = shutdown },
+            .mask = std.posix.empty_sigset,
+            .flags = 0,
+        }, null);
+    }
+
     if (injector.find(*tk.Server)) |server| {
         server.injector = injector;
+        server_instance = server;
         try server.start();
+    }
+}
+
+var server_instance: ?*tk.Server = null;
+
+fn shutdown(_: c_int) callconv(.C) void {
+    if (server_instance) |server| {
+        server_instance = null;
+        server.stop();
     }
 }

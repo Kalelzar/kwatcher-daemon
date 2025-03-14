@@ -1,6 +1,7 @@
 const std = @import("std");
 const zmpl = @import("zmpl");
 const tk = @import("tokamak");
+const metrics = @import("metrics.zig");
 
 const TemplateData = struct {};
 const templateData = TemplateData{};
@@ -24,16 +25,18 @@ pub const Template = struct {
 
     pub fn sendResponseWithData(self: *const Template, context: *tk.Context, data: *zmpl.Data) !void {
         if (context.req.header("accept")) |accept| {
+            var instr = metrics.instrumentAllocator(context.res.arena);
+            const alloc = instr.allocator();
             if (std.mem.eql(u8, accept, "application/json")) {
                 const body = try data.toJson();
                 context.res.header("content-type", "applicaton/json");
                 context.res.header("cache-control", "no-cache, no-store, must-revalidate");
-                context.res.body = body;
+                context.res.body = try alloc.dupe(u8, body);
             } else {
                 const body = try self.template.render(data, TemplateData, templateData, .{});
                 context.res.header("content-type", "text/html");
                 context.res.header("cache-control", "no-cache, no-store, must-revalidate");
-                context.res.body = body;
+                context.res.body = try alloc.dupe(u8, body);
             }
         }
 
@@ -44,7 +47,10 @@ pub const Template = struct {
 pub fn templates(children: []const tk.Route) tk.Route {
     const H = struct {
         fn handleTemplates(context: *tk.Context) anyerror!void {
-            var data = zmpl.Data.init(context.allocator);
+            var instr = metrics.instrumentAllocator(context.res.arena);
+            const alloc = instr.allocator();
+            var data = zmpl.Data.init(alloc);
+            defer data.deinit();
 
             var tdata = .{
                 .data = &data,
