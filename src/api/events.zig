@@ -10,8 +10,8 @@ const EventService = @import("../service/events.zig");
 const model = @import("../model.zig");
 const template = @import("../template.zig");
 
-pub fn @"GET /get?"(req: tk.Request, data: *zmpl.Data, event_service: *EventService, cursor: Cursor) !template.Template {
-    var instr = metrics.instrumentAllocator(req.arena);
+pub fn @"GET /get?"(res: *tk.Response, data: *zmpl.Data, event_service: *EventService, cursor: Cursor) !template.Template {
+    var instr = metrics.instrumentAllocator(res.arena);
     const alloc = instr.allocator();
     const rows = try event_service.get(alloc, cursor);
     const root = try data.object();
