@@ -2,6 +2,7 @@ const std = @import("std");
 const kwatcher = @import("kwatcher");
 const tk = @import("tokamak");
 const zmpl = @import("zmpl");
+const metrics = @import("../metrics.zig");
 
 const Cursor = @import("kwatcher-daemon").query.Cursor;
 
@@ -10,7 +11,8 @@ const model = @import("../model.zig");
 const template = @import("../template.zig");
 
 pub fn @"GET /get?"(req: tk.Request, data: *zmpl.Data, event_service: *EventService, cursor: Cursor) !template.Template {
-    const alloc = req.arena;
+    var instr = metrics.instrumentAllocator(req.arena);
+    const alloc = instr.allocator();
     const rows = try event_service.get(alloc, cursor);
     const root = try data.object();
     const events = try data.array();
