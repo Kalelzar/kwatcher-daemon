@@ -3,6 +3,7 @@ const tk = @import("tokamak");
 const httpz = @import("httpz");
 const pg = @import("pg");
 const m = @import("metrics");
+const klib = @import("klib");
 const kwatcher = @import("kwatcher");
 const KWatcherClient = @import("alias.zig").KWatcherClient;
 
@@ -79,8 +80,8 @@ pub fn free(size: usize) void {
     metrics.total_memory_allocated.incrBy(-@as(i64, @intCast(size)));
 }
 
-pub fn instrumentAllocator(allocator: std.mem.Allocator) kwatcher.mem.InstrumentedAllocator {
-    return kwatcher.mem.InstrumentedAllocator.init(
+pub fn instrumentAllocator(allocator: std.mem.Allocator) klib.mem.InstrumentedAllocator {
+    return klib.mem.InstrumentedAllocator.init(
         allocator,
         .{
             .free = &free,

@@ -7,6 +7,7 @@ const Builder = struct {
     opt: std.builtin.OptimizeMode,
     check_step: *std.Build.Step,
     httpz: *std.Build.Module,
+    klib: *std.Build.Module,
     kwatcher: *std.Build.Module,
     kwatcher_daemon: *std.Build.Module,
     kwatcher_http: *std.Build.Module,
@@ -25,6 +26,7 @@ const Builder = struct {
         const embed: []const []const u8 = &.{
             "static/index.html",
         };
+        const klib = b.dependency("klib", .{ .target = target, .optimize = opt }).module("klib");
         const tk = b.dependency("tokamak", .{ .embed = embed, .target = target, .optimize = opt });
         const tokamak = tk.module("tokamak");
         const hz = tk.builder.dependency("httpz", .{ .target = target, .optimize = opt });
@@ -45,6 +47,7 @@ const Builder = struct {
         kwatcher_daemon_lib.addImport("zmpl", zmpl);
         kwatcher_daemon_lib.addImport("pg", pg);
         kwatcher_daemon_lib.addImport("uuid", uuid);
+        kwatcher_daemon_lib.addImport("klib", klib);
 
         const kwatcher_http = b.createModule(.{
             .root_source_file = b.path("src/http.zig"),
@@ -57,6 +60,7 @@ const Builder = struct {
         kwatcher_http.addImport("httpz", httpz);
         kwatcher_http.addImport("metrics", metrics);
         kwatcher_http.addImport("uuid", uuid);
+        kwatcher_http.addImport("klib", klib);
 
         const kwatcher_daemon = b.createModule(.{
             .root_source_file = b.path("src/daemon.zig"),
@@ -66,6 +70,7 @@ const Builder = struct {
         kwatcher_daemon.addImport("kwatcher-daemon", kwatcher_daemon_lib);
         kwatcher_daemon.addImport("pg", pg);
         kwatcher_daemon.addImport("uuid", uuid);
+        kwatcher_daemon.addImport("klib", klib);
 
         return .{
             .b = b,
@@ -82,6 +87,7 @@ const Builder = struct {
             .zmpl = zmpl,
             .pg = pg,
             .uuid = uuid,
+            .klib = klib,
         };
     }
 
@@ -98,6 +104,7 @@ const Builder = struct {
         step.root_module.addImport("zmpl", self.zmpl);
         step.root_module.addImport("pg", self.pg);
         step.root_module.addImport("uuid", self.uuid);
+        step.root_module.addImport("klib", self.klib);
         step.addLibraryPath(.{ .cwd_relative = "." });
         step.addLibraryPath(.{ .cwd_relative = "." });
     }
