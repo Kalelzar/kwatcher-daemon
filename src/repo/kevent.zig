@@ -21,29 +21,22 @@ pub const KEventRow = struct {
     properties: []const u8, // JSONB
 };
 
-pub fn init(conn: *pg.Conn) KEventRepo {
+pub fn init(pool: *pg.Pool) !KEventRepo {
     return .{
-        .conn = conn,
+        .conn = try pool.acquire(),
     };
 }
 
 pub const FromPool = struct {
-    conn: *pg.Conn,
-    repo: KEventRepo,
+    pool: *pg.Pool,
     pub fn init(pool: *pg.Pool) !FromPool {
-        const conn = try pool.acquire();
         return .{
-            .conn = conn,
-            .repo = KEventRepo.init(conn),
+            .pool = pool,
         };
     }
 
-    pub fn yield(self: *FromPool) *KEventRepo {
-        return &self.repo;
-    }
-
-    pub fn deinit(self: *FromPool) void {
-        self.conn.release();
+    pub fn yield(self: *FromPool) !KEventRepo {
+        return .init(self.pool);
     }
 };
 

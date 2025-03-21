@@ -15,9 +15,9 @@ pub const KClientRow = struct {
     host: []const u8, // TEXT
 };
 
-pub fn init(conn: *pg.Conn) KClientRepo {
+pub fn init(pool: *pg.Pool) !KClientRepo {
     return .{
-        .conn = conn,
+        .conn = try pool.acquire(),
     };
 }
 
