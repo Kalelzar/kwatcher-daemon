@@ -61,10 +61,6 @@ const ScopedDependencies = struct {
     clientRepo: ?*repo.KClient = null,
     eventRepo: ?*repo.KEvent = null,
 
-    pub fn pgConnFactory(pool: *pg.Pool) !*pg.Conn {
-        return pool.acquire();
-    }
-
     pub fn clientRepoFactory(
         self: *ScopedDependencies,
         arena: *kwatcher.mem.InternalArena,
@@ -73,14 +69,9 @@ const ScopedDependencies = struct {
         if (self.clientRepo) |r| {
             return r;
         } else {
-            // We need to acquire a connection manually. Had we injected it, we would have to release it here instead.
-            // No need for the extra churn.
-            // Maybe we could add lazy evaluation in the future ;)
-            const conn = try pgConnFactory(pool);
-            errdefer conn.release();
             const alloc = arena.allocator();
             self.clientRepo = try alloc.create(repo.KClient);
-            self.clientRepo.?.* = repo.KClient.init(conn);
+            self.clientRepo.?.* = try repo.KClient.init(pool);
             return self.clientRepo.?;
         }
     }
@@ -93,24 +84,19 @@ const ScopedDependencies = struct {
         if (self.eventRepo) |r| {
             return r;
         } else {
-            // We need to acquire a connection manually. Had we injected it, we would have to release it here instead.
-            // No need for the extra churn.
-            // Maybe we could add lazy evaluation in the future ;)
-            const conn = try pgConnFactory(pool);
-            errdefer conn.release();
             const alloc = arena.allocator();
             self.eventRepo = try alloc.create(repo.KEvent);
-            self.eventRepo.?.* = repo.KEvent.init(conn);
+            self.eventRepo.?.* = try repo.KEvent.init(pool);
             return self.eventRepo.?;
         }
     }
 
     pub fn deconstruct(self: *ScopedDependencies) void {
-        if (self.clientRepo) |_| {
-            self.clientRepo.?.deinit();
+        if (self.clientRepo) |*r| {
+            r.*.deinit();
         }
-        if (self.eventRepo) |_| {
-            self.eventRepo.?.deinit();
+        if (self.eventRepo) |*r| {
+            r.*.deinit();
         }
     }
 };

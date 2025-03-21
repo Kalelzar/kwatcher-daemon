@@ -96,7 +96,7 @@ const Builder = struct {
         step: *std.Build.Step.Compile,
     ) void {
         step.linkLibC();
-        step.linkSystemLibrary("rabbitmq.4");
+        step.linkSystemLibrary("rabbitmq");
         step.root_module.addImport("tokamak", self.tokamak);
         step.root_module.addImport("kwatcher", self.kwatcher);
         step.root_module.addImport("httpz", self.httpz);

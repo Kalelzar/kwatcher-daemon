@@ -6,14 +6,16 @@ const Cursor = @import("kwatcher-daemon").query.Cursor;
 
 const EventService = @This();
 
-repo: *KEventRepo,
+repo_factory: *KEventRepo.FromPool,
 
 pub fn init(repo: *KEventRepo.FromPool) EventService {
     return .{
-        .repo = repo.yield(),
+        .repo_factory = repo,
     };
 }
 
 pub fn get(self: *const EventService, allocator: std.mem.Allocator, cursor: Cursor) !std.ArrayListUnmanaged(KEventRepo.KEventRow) {
-    return self.repo.get(allocator, cursor);
+    var repo = try self.repo_factory.yield();
+    defer repo.deinit();
+    return repo.get(allocator, cursor);
 }
