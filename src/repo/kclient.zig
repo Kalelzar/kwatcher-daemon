@@ -45,9 +45,12 @@ pub fn getOrCreate(self: *KClientRepo, arena: *kwatcher.mem.InternalArena, clien
         },
         else => return e,
     };
-    if (row) |_found| {
-        var found = _found;
-        const data = try found.to(KClientRow, .{ .map = .name, .allocator = alloc });
+    if (row) |_| {
+        var found = row.?;
+        const data = try found.to(KClientRow, .{
+            .map = .name,
+            .allocator = alloc,
+        });
         found.deinit() catch {};
 
         return data;

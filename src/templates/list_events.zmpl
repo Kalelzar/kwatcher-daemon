@@ -7,16 +7,19 @@
   @partial list_event_duration(item.duration)
   <td scope="row" class="text-lg p-1"><p class="rounded-xl p-4 w-fit bg-zinc-800 outline-2 outline-solid outline-yellow-100">{{item.event_type}}</p></td>
   @if (std.mem.eql(u8, try item.object.get("event_type").?.coerce([]const u8), "afk-status"))
-
   
   @partial list_event_props_afk(item.data)
   
   @else if (std.mem.eql(u8, try item.object.get("event_type").?.coerce([]const u8), "spotify-status"))
-
   
   @partial list_event_props_media(item.data)
+
+  @else if (std.mem.eql(u8, try item.object.get("event_type").?.coerce([]const u8), "kavita-status"))
+  
+  @partial list_event_props_kavita(item.data)
   
   @else
+  
   
   @partial list_event_props(item.data)
 
