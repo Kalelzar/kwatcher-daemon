@@ -6,8 +6,8 @@
               props: JSON.parse(`{{props}}`),
               get isReading() { return this.props.status == 'active'; },
               get title() { return this.props.chapterTitle; },
-              get artist() { return this.props.writers; },
-              get album() { return this.props.seriesName; },
+              get writers() { return this.props.writers; },
+              get series() { return this.props.seriesName; },
               get cover() { return `https://kavita.kalelzar.xyz/api/image/series-cover?seriesId=${this.props.seriesId}&apiKey=`; },
             }">
     <div class="grid outline-yellow-100 outline-solid outline-1 drop-shadow-xl w-full text-center px-4 py-2 grid-cols-[auto_0.5fr_auto_0.5fr] bg-zinc-500 rounded-se-4xl rounded-ee-4xl rounded-ss-md rounded-es-md" x-show="isReading">
