@@ -25,7 +25,6 @@ const App = struct {
     event_repo: KEventRepo.FromPool,
     event_service: EventService,
     server: *tk.Server,
-    kwatcher_client: *KWatcherClient,
     routes: []const tk.Route = &.{
         tk.logger(.{}, &.{
             metrics.track(&.{
@@ -94,7 +93,6 @@ pub fn main() !void {
                     .port = 8080,
                 },
             },
-            &kwatcher_client,
             ptr,
         }, null);
 
@@ -120,7 +118,13 @@ pub fn main() !void {
         if (injector.find(*tk.Server)) |server| {
             server.injector = injector;
             server_instance = server;
+            const kwthread = try std.Thread.spawn(
+                .{ .allocator = alloc },
+                @TypeOf(kwatcher_client).start,
+                .{&kwatcher_client},
+            );
             try server.start();
+            kwthread.join();
         }
     }
     _ = gpa.detectLeaks();
