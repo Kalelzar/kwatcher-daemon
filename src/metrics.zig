@@ -5,10 +5,10 @@ const pg = @import("pg");
 const m = @import("metrics");
 const klib = @import("klib");
 const kwatcher = @import("kwatcher");
-const KWatcherClient = @import("alias.zig").KWatcherClient;
 
 var metrics = m.initializeNoop(Metrics);
 pub var collected: std.BufMap = undefined;
+pub var collected_mutex: std.Thread.Mutex = .{};
 
 const Metrics = struct {
     statuses: Status,
@@ -97,13 +97,10 @@ pub fn write(writer: anytype) !void {
 fn sendMetrics(context: *tk.Context) !void {
     context.res.header("content-type", "text/plain; version=0.0.4");
 
-    const client = try context.injector.get(*KWatcherClient);
-    defer client.deps.internal_arena.reset();
-    client.handleConsume(std.time.ns_per_s / 200) catch {
-        try client.reset();
-    };
     const writer = context.res.writer();
 
+    collected_mutex.lock();
+    defer collected_mutex.unlock();
     var iter = metrics.timeOfLastUpdate.impl.values.iterator();
     const now = std.time.timestamp();
     while (iter.next()) |entry| {
@@ -120,7 +117,6 @@ fn sendMetrics(context: *tk.Context) !void {
     }
     try httpz.writeMetrics(writer);
     try pg.writeMetrics(writer);
-    try kwatcher.metrics.write(writer);
     try write(writer);
     context.responded = true;
 }
