@@ -118,23 +118,29 @@ pub fn main() !void {
         if (injector.find(*tk.Server)) |server| {
             server.injector = injector;
             server_instance = server;
-            const kwthread = try std.Thread.spawn(
+            const tkthread = try std.Thread.spawn(
                 .{ .allocator = alloc },
-                @TypeOf(kwatcher_client).start,
-                .{&kwatcher_client},
+                tk.Server.start,
+                .{server},
             );
-            try server.start();
-            kwthread.join();
+            kwatcher_instance = &kwatcher_client;
+            try kwatcher_client.start();
+            tkthread.join();
         }
     }
     _ = gpa.detectLeaks();
 }
 
 var server_instance: ?*tk.Server = null;
+var kwatcher_instance: ?*KWatcherClient = null;
 
 fn shutdown(_: c_int) callconv(.C) void {
     if (server_instance) |server| {
         server_instance = null;
         server.stop();
+    }
+    if (kwatcher_instance) |kwatch| {
+        kwatcher_instance = null;
+        kwatch.stop();
     }
 }
