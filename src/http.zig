@@ -83,7 +83,6 @@ pub fn main() !void {
         var singleton = KWatcherSingleton{};
         var kwatcher_client = try KWatcherClient.init(alloc, &singleton);
         defer kwatcher_client.deinit();
-        try kwatcher_client.configure();
 
         const root = tk.Injector.init(&.{
             &alloc,
