@@ -2,7 +2,7 @@ const std = @import("std");
 const kwatcher = @import("kwatcher");
 const repo = @import("kwatcher-daemon").repo;
 
-pub fn @"consume amq.direct/heartbeat"(
+pub fn @"consume amq.direct/heartbeat/heartbeat"(
     heartbeat: kwatcher.schema.Heartbeat.V1(std.json.Value),
     arena: *kwatcher.mem.InternalArena,
     kclient_repo: *repo.KClient,

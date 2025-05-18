@@ -37,8 +37,8 @@
             .hash = "pg-0.0.0-Wp_7gbPdBQCcAZ9ItP9sGNlJ7hBCNG_Z9eyZZBDRhszy",
         },
         .kwatcher = .{
-            .url = "git+https://github.com/Kalelzar/kwatcher.git#fa26a7f9230f17aec1bb0712c9a6e1a2911ab4a6",
-            .hash = "kwatcher-0.1.0-VYVPxv1DAQAW6jbXXe1WDnTl5GV_tUeKU3NjdIiNxYe9",
+            .url = "git+https://github.com/Kalelzar/kwatcher.git#40a5e774404276f520c84fb040eb1b9b00db7bc8",
+            .hash = "kwatcher-0.1.0-VYVPxsCPAQD1P6P_Sgfm_u7NPS9S58yRvNIJTgyVls7W",
         },
         .klib = .{
             .url = "git+https://github.com/Kalelzar/klib.git#0f919cdb8abdda80e8b598a3d7c0377e1fa2f2ba",
