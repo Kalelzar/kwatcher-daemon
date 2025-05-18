@@ -3,7 +3,7 @@ const schema = @import("kwatcher").schema;
 
 const metric = @import("../metrics.zig");
 
-pub fn @"consume amq.direct/metrics"(
+pub fn @"consume amq.direct/metrics/metrics"(
     metrics: schema.Metrics.V1(),
 ) !void {
     metric.collected_mutex.lock();
