@@ -124,6 +124,7 @@ pub fn main() !void {
         SingletonDependencies,
         ScopedDependencies,
         Config,
+        struct {},
         routes,
         EventProvider,
     ).init(allocator, &singleton);

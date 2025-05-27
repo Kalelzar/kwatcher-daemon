@@ -3,8 +3,6 @@ const tk = @import("tokamak");
 const zmpl = @import("zmpl");
 const pg = @import("pg");
 const kwatcher = @import("kwatcher");
-const KWatcherClient = @import("alias.zig").KWatcherClient;
-const KWatcherSingleton = @import("alias.zig").Singleton;
 const api = @import("api.zig");
 const model = @import("model.zig");
 const template = @import("template.zig");
@@ -80,10 +78,6 @@ pub fn main() !void {
         });
         defer ptr.deinit();
 
-        var singleton = KWatcherSingleton{};
-        var kwatcher_client = try KWatcherClient.init(alloc, &singleton);
-        defer kwatcher_client.deinit();
-
         const root = tk.Injector.init(&.{
             &alloc,
             &tk.ServerOptions{
@@ -122,8 +116,6 @@ pub fn main() !void {
                 tk.Server.start,
                 .{server},
             );
-            kwatcher_instance = &kwatcher_client;
-            try kwatcher_client.start();
             tkthread.join();
         }
     }
@@ -131,15 +123,10 @@ pub fn main() !void {
 }
 
 var server_instance: ?*tk.Server = null;
-var kwatcher_instance: ?*KWatcherClient = null;
 
 fn shutdown(_: c_int) callconv(.C) void {
     if (server_instance) |server| {
         server_instance = null;
         server.stop();
-    }
-    if (kwatcher_instance) |kwatch| {
-        kwatcher_instance = null;
-        kwatch.stop();
     }
 }

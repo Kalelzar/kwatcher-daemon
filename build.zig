@@ -54,9 +54,9 @@ const Builder = struct {
         });
         kwatcher_http.link_libc = true;
         kwatcher_http.addImport("pg", pg);
+        kwatcher_http.addImport("kwatcher-daemon", kwatcher_daemon_lib);
         kwatcher_http.addImport("tokamak", tokamak);
         kwatcher_http.addImport("zmpl", zmpl);
-        kwatcher_http.addImport("kwatcher-daemon", kwatcher_daemon_lib);
         kwatcher_http.addImport("httpz", httpz);
         kwatcher_http.addImport("metrics", metrics);
         kwatcher_http.addImport("uuid", uuid);
@@ -77,13 +77,13 @@ const Builder = struct {
             .check_step = check_step,
             .target = target,
             .opt = opt,
-            .tokamak = tokamak,
             .kwatcher = kwatcher,
             .kwatcher_daemon = kwatcher_daemon,
             .kwatcher_http = kwatcher_http,
+            .kwatcher_daemon_lib = kwatcher_daemon_lib,
+            .tokamak = tokamak,
             .metrics = metrics,
             .httpz = httpz,
-            .kwatcher_daemon_lib = kwatcher_daemon_lib,
             .zmpl = zmpl,
             .pg = pg,
             .uuid = uuid,
