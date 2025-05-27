@@ -4,26 +4,17 @@ const httpz = @import("httpz");
 const pg = @import("pg");
 const m = @import("metrics");
 const klib = @import("klib");
-const kwatcher = @import("kwatcher");
 
 var metrics = m.initializeNoop(Metrics);
-pub var collected: std.BufMap = undefined;
-pub var collected_mutex: std.Thread.Mutex = .{};
 
 const Metrics = struct {
     statuses: Status,
-    up: Up,
-    timeOfLastUpdate: TimeOfLastUpdate,
     total_memory_allocated: MemUsage,
     peak_memory_allocated: MemUsage,
 
     const MemUsage = m.Gauge(i64);
     const StatusL = struct { status: u16 };
     const Status = m.CounterVec(u32, StatusL);
-    const UpL = struct { job: []const u8 };
-    const Up = m.GaugeVec(u1, UpL);
-    const TimeOfLastUpdateL = struct { job: []const u8 };
-    const TimeOfLastUpdate = m.GaugeVec(i64, TimeOfLastUpdateL);
 };
 
 pub fn status(labels: Metrics.StatusL) !void {
@@ -34,16 +25,7 @@ pub fn update(labels: Metrics.TimeOfLastUpdateL) !void {
     return metrics.timeOfLastUpdate.set(labels, std.time.timestamp());
 }
 
-pub fn up(labels: Metrics.UpL) !void {
-    return metrics.up.set(labels, 1);
-}
-
-pub fn down(labels: Metrics.UpL) !void {
-    return metrics.up.set(labels, 0);
-}
-
 pub fn initialize(allocator: std.mem.Allocator, comptime opts: m.RegistryOpts) !void {
-    collected = std.BufMap.init(allocator);
     metrics = .{
         .total_memory_allocated = Metrics.MemUsage.init(
             "kwatcher_total_memory_bytes",
@@ -56,16 +38,11 @@ pub fn initialize(allocator: std.mem.Allocator, comptime opts: m.RegistryOpts) !
             opts,
         ),
         .statuses = try Metrics.Status.init(allocator, "kwatcher_https_statuses", .{}, opts),
-        .up = try Metrics.Up.init(allocator, "up", .{}, opts),
-        .timeOfLastUpdate = try Metrics.TimeOfLastUpdate.init(allocator, "kwatcher_time_of_last_update", .{}, opts),
     };
 }
 
 pub fn deinitialize() void {
     metrics.statuses.deinit();
-    metrics.up.deinit();
-    metrics.timeOfLastUpdate.deinit();
-    collected.deinit();
 }
 
 pub fn alloc(size: usize) void {
@@ -99,25 +76,10 @@ fn sendMetrics(context: *tk.Context) !void {
 
     const writer = context.res.writer();
 
-    collected_mutex.lock();
-    defer collected_mutex.unlock();
-    var iter = metrics.timeOfLastUpdate.impl.values.iterator();
-    const now = std.time.timestamp();
-    while (iter.next()) |entry| {
-        if (entry.value_ptr.*.value >= now - 15) { // TODO: This should be configurable
-            try up(.{ .job = entry.key_ptr.*.job });
-        } else {
-            try down(.{ .job = entry.key_ptr.*.job });
-        }
-    }
-
-    var collected_iter = collected.hash_map.valueIterator();
-    while (collected_iter.next()) |collected_metrics| {
-        try writer.writeAll(collected_metrics.*);
-    }
     try httpz.writeMetrics(writer);
     try pg.writeMetrics(writer);
     try write(writer);
+
     context.responded = true;
 }
 
