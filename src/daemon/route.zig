@@ -15,7 +15,7 @@ pub fn @"consume amq.direct/heartbeat/heartbeat"(
         .{ .whitespace = .indent_2 },
     );
 
-    const user_info = kwatcher.schema.UserInfo.fromV1(allocator, &heartbeat.user);
+    const user_info = try kwatcher.schema.UserInfo.fromV1(allocator, &heartbeat.user);
 
     const client = try kclient_repo.getOrCreate(
         arena,
