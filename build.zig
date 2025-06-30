@@ -40,6 +40,8 @@ const Builder = struct {
 
         const kwatcher_daemon_lib = b.addModule("kawatcher-daemon", .{
             .root_source_file = b.path("src/root.zig"),
+            .target = target,
+            .optimize = opt,
         });
         kwatcher_daemon_lib.link_libc = true;
         kwatcher_daemon_lib.addImport("tokamak", tokamak);
@@ -51,6 +53,8 @@ const Builder = struct {
 
         const kwatcher_http = b.createModule(.{
             .root_source_file = b.path("src/http.zig"),
+            .target = target,
+            .optimize = opt,
         });
         kwatcher_http.link_libc = true;
         kwatcher_http.addImport("pg", pg);
@@ -64,6 +68,8 @@ const Builder = struct {
 
         const kwatcher_daemon = b.createModule(.{
             .root_source_file = b.path("src/daemon.zig"),
+            .target = target,
+            .optimize = opt,
         });
         kwatcher_daemon.link_libc = true;
         kwatcher_daemon.addImport("kwatcher", kwatcher);
@@ -105,7 +111,6 @@ const Builder = struct {
         step.root_module.addImport("pg", self.pg);
         step.root_module.addImport("uuid", self.uuid);
         step.root_module.addImport("klib", self.klib);
-        step.addLibraryPath(.{ .cwd_relative = "." });
         step.addLibraryPath(.{ .cwd_relative = "." });
     }
 
