@@ -71,7 +71,7 @@ const ScopedDependencies = struct {
         } else {
             const alloc = arena.allocator();
             self.clientRepo = try alloc.create(repo.KClient);
-            errdefer alloc.destroy(self.clientRepo);
+            errdefer alloc.destroy(self.clientRepo.?);
             self.clientRepo.?.* = try repo.KClient.init(pool);
             return self.clientRepo.?;
         }
@@ -87,7 +87,7 @@ const ScopedDependencies = struct {
         } else {
             const alloc = arena.allocator();
             self.eventRepo = try alloc.create(repo.KEvent);
-            errdefer alloc.destroy(self.eventRepo);
+            errdefer alloc.destroy(self.eventRepo.?);
             self.eventRepo.?.* = try repo.KEvent.init(pool);
             return self.eventRepo.?;
         }
