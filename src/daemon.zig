@@ -94,11 +94,11 @@ const ScopedDependencies = struct {
     }
 
     pub fn deconstruct(self: *ScopedDependencies) void {
-        if (self.clientRepo) |*r| {
-            r.*.deinit();
+        if (self.clientRepo) |r| {
+            r.deinit();
         }
-        if (self.eventRepo) |*r| {
-            r.*.deinit();
+        if (self.eventRepo) |r| {
+            r.deinit();
         }
     }
 };
