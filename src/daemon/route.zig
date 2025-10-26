@@ -21,7 +21,8 @@ pub fn @"consume amq.direct/heartbeat/heartbeat"(
 
     const client = try kclient_repo.getOrCreate(
         arena,
-        kwatcher.schema.ClientInfo.fromV1(&heartbeat.client),
+        // We can just give a placeholder here since the id isn't used
+        kwatcher.schema.ClientInfo.fromV1(&heartbeat.client, "placeholder"),
         user_info,
     );
 
