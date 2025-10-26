@@ -1,0 +1,7 @@
+[submodule "vendor/kwatcher"]
+	path = vendor/kwatcher
+	url = https://git.kalelzar.xyz/kalelzar/kwatcher.git
+	branch = master
+[submodule "vendor/kwatcher-event"]
+	path = vendor/kwatcher-event
+	url = https://git.kalelzar.xyz/kalelzar/kwatcher-event.git
