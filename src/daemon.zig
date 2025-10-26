@@ -1,7 +1,7 @@
 const std = @import("std");
 const kwatcher = @import("kwatcher");
 const pg = @import("pg");
-const repo = @import("kwatcher-daemon").repo;
+const repo = @import("kwatcher-event").repo;
 
 const routes = @import("daemon/route.zig");
 

@@ -10,12 +10,12 @@
 
     // This is a [Semantic Version](https://semver.org/).
     // In a future version of Zig it will be used for package deduplication.
-    .version = "0.1.0",
+    .version = "0.1.1",
 
     // This field is optional.
     // This is currently advisory only; Zig does not yet do anything
     // with this value.
-    .minimum_zig_version = "0.14.0",
+    .minimum_zig_version = "0.15.2",
     .fingerprint = 0x2527480e777bcb59,
 
     // This field is optional.
@@ -24,32 +24,18 @@
     // Once all dependencies are fetched, `zig build` no longer requires
     // internet connectivity.
     .dependencies = .{
-        .tokamak = .{
-            .url = "git+https://github.com/cztomsik/tokamak.git#88b6875782fa03b9a8408a80e142883968a59788",
-            .hash = "tokamak-2.0.0-AAAAAKG8AQBxwsCtqj-jonqHL9wLLnYttRXj74xbIiUz",
-        },
-        .zmpl = .{
-            .url = "git+https://github.com/jetzig-framework/zmpl.git#3ec11289fdee2e0c70975cb5dd85d3041d723912",
-            .hash = "zmpl-0.0.1-SYFGBuZoAwAMuvHNkO_1BbutpWhg7CdSgYd8t4OaaZeR",
-        },
         .pg = .{
-            .url = "git+https://github.com/karlseguin/pg.zig#c4c851192e6e55ec793836c991afdd1a5c747276",
-            .hash = "pg-0.0.0-Wp_7gbPdBQCcAZ9ItP9sGNlJ7hBCNG_Z9eyZZBDRhszy",
+            .url = "git+https://github.com/karlseguin/pg.zig#f930e90b735ebadf28244c7a31e9c442b264b544",
+            .hash = "pg-0.0.0-Wp_7gfoJBgDfkQBaWRTwjYcTdNyS8UHRDmMTs4NuSmxY",
         },
-        .kwatcher = .{
-            .url = "git+https://github.com/Kalelzar/kwatcher#e11c7f0533a9675b26f6f140ce39be0a637aadfd",
-            .hash = "kwatcher-0.1.0-VYVPxjmiAwCtygOH1r7i4G-9TyhwWy3-WdDajHaPWcg3",
-        },
-        .klib = .{
-            .url = "git+https://github.com/Kalelzar/klib.git#0f919cdb8abdda80e8b598a3d7c0377e1fa2f2ba",
-            .hash = "klib-0.0.0-vum4ZGViAAD9WjA7o2AHm2w-eavtDAyPyJW4iKyU5vjF",
+        .kwatcher_event = .{
+            .path = "vendor/kwatcher-event",
         },
     },
     .paths = .{
         "build.zig",
         "build.zig.zon",
         "src",
-        "static",
         // For example...
         //"LICENSE",
         //"README.md",

@@ -1,6 +1,6 @@
 const std = @import("std");
 const kwatcher = @import("kwatcher");
-const repo = @import("kwatcher-daemon").repo;
+const repo = @import("kwatcher-event").repo;
 
 pub fn @"consume amq.direct/heartbeat/heartbeat"(
     heartbeat: kwatcher.schema.Heartbeat.V1(std.json.Value),
@@ -9,11 +9,13 @@ pub fn @"consume amq.direct/heartbeat/heartbeat"(
     kevent_repo: *repo.KEvent,
 ) !void {
     const allocator = arena.allocator();
-    const props = try std.json.stringifyAlloc(
-        allocator,
-        heartbeat.properties,
-        .{ .whitespace = .indent_2 },
-    );
+
+    var alloc_writer = std.Io.Writer.Allocating.init(allocator);
+    var formatter = std.json.fmt(heartbeat.properties, .{ .whitespace = .indent_2 });
+
+    try formatter.format(&alloc_writer.writer);
+
+    const props = try alloc_writer.toOwnedSlice();
 
     const user_info = try kwatcher.schema.UserInfo.fromV1(allocator, &heartbeat.user);
 
